@@ -1,18 +1,14 @@
 import { Send } from '@tamagui/lucide-icons'
-import { YStack, XStack, ScrollView, Input, Button, Text } from 'tamagui'
+import { YStack, XStack, ScrollView, Input, Button } from 'tamagui'
+import ChatBubble from 'components/chat/ChatBubble'
 
 export default function ChatScreen() {
   return (
     <YStack flex={1} bg="$background">
       {/* Scrollable messages area */}
       <ScrollView flex={1} contentContainerStyle={{ p: '$4', gap: '$4' }}>
-        <YStack bg="$surface1" p="$4" rounded="$lg" self="flex-start" maxW="85%">
-          <Text color="$color">Hello! I am ready to help you.</Text>
-        </YStack>
-
-        <YStack bg="$background" p="$4" rounded="$lg" borderWidth={1} borderColor="$surface2" self="flex-end" maxW="85%">
-          <Text color="$color">Let's build a clean and minimal Gemini-style layout.</Text>
-        </YStack>
+        <ChatBubble variant="ai" message="Hello! I am ready to help you." />
+        <ChatBubble variant="user" message="Let's build a clean and minimal Gemini-style layout." />
       </ScrollView>
 
       {/* Bottom floating input bar */}

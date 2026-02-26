@@ -106,3 +106,39 @@ No backend logic
 Clean layout only
 ```
 
+### Third Prompt:
+
+```
+Create reusable ChatBubble component.
+
+Requirements:
+
+Variant: "user" | "ai"
+
+User bubble:
+
+Slightly tinted accent color
+
+Align right
+
+AI bubble:
+
+surface1 background
+
+Align left
+
+Radius large
+
+Padding using tokens
+
+Max width 75%
+
+Proper TypeScript props
+
+Memoized to prevent unnecessary re-renders
+
+Place in:
+components/chat/ChatBubble.tsx
+```
+
+
