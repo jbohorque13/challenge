@@ -14,7 +14,6 @@ export type ChatBubbleProps = {
 
 const BubbleContainer = styled(YStack, {
   name: 'BubbleContainer',
-  p: '$4',
   rounded: '$lg',
 })
 
@@ -41,9 +40,9 @@ const ChatBubble = ({
       <YStack 
         self={isUser ? 'flex-end' : 'flex-start'} 
         my="$1.5"
-        style={{ maxWidth: '85%' }}
       >
         <BubbleContainer
+          p={isUser ? '$4' : '$0'}
           bg={isUser ? '$surface2' : '$surface1'}
           borderWidth={isUser ? 1 : 0}
           borderColor="$borderColor"

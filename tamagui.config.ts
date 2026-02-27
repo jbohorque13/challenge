@@ -41,7 +41,7 @@ export const config = createTamagui({
       background: '#f7f7f6',
       color: '#2d2c2c',
       borderColor: '#e8e7e5',
-      surface1: '#fcfcfb',
+      surface1: 'transparent',
       surface2: '#f2f1ef',
     },
     dark: {
@@ -49,7 +49,7 @@ export const config = createTamagui({
       background: '#1a1a1a',
       color: '#f0f0f0',
       borderColor: '#333333',
-      surface1: '#222222',
+      surface1: 'transparent',
       surface2: '#2a2a2a',
     },
   },

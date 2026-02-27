@@ -65,7 +65,7 @@ const StreamingText = ({ content, isStreaming = false, onStreamEnd }: Props) => 
   }, [content, isStreaming, onStreamEnd])
 
   return (
-    <Text fontSize={16} lineHeight={22} color="$color">
+    <Text fontSize={16} lineHeight={24}>
       {displayedText}
     </Text>
   )
