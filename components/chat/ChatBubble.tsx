@@ -1,58 +1,66 @@
 import React, { memo } from 'react'
-import { YStack, Text, type YStackProps } from 'tamagui'
-import Animated, {
-  FadeInUp,
-  useAnimatedStyle,
-  useSharedValue,
-  withSpring,
-} from 'react-native-reanimated'
-import { Pressable } from 'react-native'
+import { YStack, styled } from 'tamagui'
+import AnimatedMessageWrapper from './AnimatedMessageWrapper'
+import MessageActions from './MessageActions'
+import StreamingText from './StreamingText'
 
 export type ChatBubbleProps = {
   message: string
   variant: 'user' | 'ai'
-} & YStackProps
+  isStreaming?: boolean
+  onRegenerate?: () => void
+  onStreamEnd?: () => void
+}
 
-const AnimatedYStack = Animated.createAnimatedComponent(YStack)
+const BubbleContainer = styled(YStack, {
+  name: 'BubbleContainer',
+  p: '$4',
+  rounded: '$lg',
+})
 
-const ChatBubble = ({ message, variant, ...rest }: ChatBubbleProps) => {
+/**
+ * ChatBubble - Streaming-ready AI Interface
+ * 
+ * UX Rationale:
+ * 1. Bubble background appears immediately via AnimatedMessageWrapper 
+ *    (low delay for AI, instant for User).
+ * 2. StreamingText handles the progressive generation of AI content.
+ * 3. User messages are rendered instantly without streaming logic.
+ */
+const ChatBubble = ({ 
+  message, 
+  variant, 
+  isStreaming, 
+  onRegenerate, 
+  onStreamEnd 
+}: ChatBubbleProps) => {
   const isUser = variant === 'user'
-  const scale = useSharedValue(1)
-
-  const animatedStyle = useAnimatedStyle(() => ({
-    transform: [{ scale: scale.value }],
-  }))
 
   return (
-    <AnimatedYStack
-      entering={FadeInUp.duration(220)} // sin springify
-      self={isUser ? 'flex-end' : 'flex-start'}
-      maxW="75%"
-      style={animatedStyle}
-    >
-      <Pressable
-        onPressIn={() => {
-          scale.value = withSpring(0.97, { damping: 15 })
-        }}
-        onPressOut={() => {
-          scale.value = withSpring(1)
-        }}
+    <AnimatedMessageWrapper enabled={!isUser}>
+      <YStack 
+        self={isUser ? 'flex-end' : 'flex-start'} 
+        my="$1.5"
+        style={{ maxWidth: '85%' }}
       >
-        <YStack
-          p="$4"
-          m="$2"
-          rounded="$lg"
+        <BubbleContainer
           bg={isUser ? '$surface2' : '$surface1'}
           borderWidth={isUser ? 1 : 0}
           borderColor="$borderColor"
-          {...rest}
+          {...(isUser ? { borderBottomRightRadius: '$1' } : { borderBottomLeftRadius: '$1' })}
         >
-          <Text fontSize="$4">
-            {message}
-          </Text>
-        </YStack>
-      </Pressable>
-    </AnimatedYStack>
+          <StreamingText 
+            content={message} 
+            isStreaming={!isUser && isStreaming} 
+            onStreamEnd={onStreamEnd}
+          />
+        </BubbleContainer>
+        
+        {!isUser && !isStreaming && (
+          <MessageActions content={message} onRegenerate={onRegenerate} />
+        )}
+      </YStack>
+    </AnimatedMessageWrapper>
   )
 }
 

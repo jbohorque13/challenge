@@ -1,21 +1,25 @@
-import React, { memo, useCallback, useRef } from 'react'
-import { YStack, styled } from 'tamagui'
-import { FlatList, Platform } from 'react-native'
+import React, { memo, useCallback, useRef, useState } from 'react'
+import { YStack, styled, ZStack } from 'tamagui'
+import { FlatList, Platform, type NativeSyntheticEvent, type NativeScrollEvent } from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { KeyboardAvoidingView } from 'react-native-keyboard-controller'
 import { useHeaderHeight } from '@react-navigation/elements'
 import ChatBubble from './ChatBubble'
 import TypingIndicator from './TypingIndicator'
+import ScrollToBottomButton from './ScrollToBottomButton'
 
 export type Message = {
   id: string
   role: 'user' | 'assistant'
   content: string
+  isStreaming?: boolean
 }
 
 export type ChatLayoutProps = {
   messages: Message[]
   isTyping?: boolean
+  onRegenerate?: () => void
+  onStreamEnd?: (id: string) => void
   renderInput: () => React.ReactNode
 }
 
@@ -26,30 +30,41 @@ const RootContainer = styled(YStack, {
 })
 
 /**
- * ChatLayout - Production-grade Chat Layout
+ * ChatLayout - High-performance AI Interface
  * 
- * Architecture decisions:
- * 1. Inverted FlatList: Standard for high-performance chat. Index 0 is the bottom.
- *    New messages are prepended to the data array. This avoids layout recalculations
- *    for existing items and keeps the scroll position synced naturally.
- * 2. KeyboardAvoidingView: Uses react-native-keyboard-controller for native sync.
- *    Vertical offset accounts for the navigation header height.
- * 3. flex: 1 throughout: Ensures the container fills the screen correctly.
- * 4. Safe Area: Handled via insets at the root and bottom of the input container.
+ * UX Decisions:
+ * 1. Inverted FlatList: Standard for chat, ensures bottom-aligned growth and 
+ *    frame-perfect keyboard push-up.
+ * 2. Scrolled-Up detection: In an inverted list, y=0 is bottom. We show the 
+ *    jump-to-bottom button if y > 100.
  */
-const ChatLayout = ({ messages, isTyping, renderInput }: ChatLayoutProps) => {
+const ChatLayout = ({ messages, isTyping, onRegenerate, onStreamEnd, renderInput }: ChatLayoutProps) => {
   const insets = useSafeAreaInsets()
   const headerHeight = useHeaderHeight()
   const flatListRef = useRef<FlatList>(null)
+  const [showScrollButton, setShowScrollButton] = useState(false)
+
+  const handleScroll = useCallback((event: NativeSyntheticEvent<NativeScrollEvent>) => {
+    const yOffset = event.nativeEvent.contentOffset.y
+    // In inverted lists, y > 0 means the user has scrolled away from the bottom (top of the view)
+    setShowScrollButton(yOffset > 100)
+  }, [])
+
+  const scrollToBottom = useCallback(() => {
+    flatListRef.current?.scrollToOffset({ offset: 0, animated: true })
+  }, [])
 
   const renderItem = useCallback(({ item }: { item: Message }) => {
     return (
       <ChatBubble
         variant={item.role === 'user' ? 'user' : 'ai'}
         message={item.content}
+        isStreaming={item.isStreaming}
+        onRegenerate={onRegenerate}
+        onStreamEnd={() => onStreamEnd?.(item.id)}
       />
     )
-  }, [])
+  }, [onRegenerate, onStreamEnd])
 
   return (
     <RootContainer>
@@ -58,26 +73,40 @@ const ChatLayout = ({ messages, isTyping, renderInput }: ChatLayoutProps) => {
         style={{ flex: 1 }}
         keyboardVerticalOffset={headerHeight}
       >
-        <FlatList
-          ref={flatListRef}
-          data={messages}
-          keyExtractor={(item) => item.id}
-          renderItem={renderItem}
-          inverted // ChatGPT-style: grows from bottom to top
-          removeClippedSubviews={Platform.OS === 'android'}
-          initialNumToRender={15}
-          maxToRenderPerBatch={10}
-          windowSize={10}
-          keyboardShouldPersistTaps="handled"
-          contentContainerStyle={{
-            padding: 16,
-          }}
-          // If inverted, ListHeaderComponent is at the bottom, 
-          // perfect for the typing indicator.
-          ListHeaderComponent={isTyping ? <TypingIndicator /> : null}
-        />
-        
-        {/* Input container with bottom safe area padding */}
+        <ZStack flex={1}>
+          <FlatList
+            ref={flatListRef}
+            data={messages}
+            keyExtractor={(item) => item.id}
+            renderItem={renderItem}
+            inverted
+            removeClippedSubviews={Platform.OS === 'android'}
+            initialNumToRender={15}
+            windowSize={10}
+            keyboardShouldPersistTaps="handled"
+            contentContainerStyle={{ padding: 16 }}
+            onScroll={handleScroll}
+            scrollEventThrottle={16}
+            ListHeaderComponent={isTyping ? <TypingIndicator /> : null}
+          />
+
+          {/* Floating Scroll to Bottom - Positioned above input */}
+          <YStack 
+            pointerEvents="box-none"
+            style={{
+              position: 'absolute', 
+              bottom: 16, 
+              right: 16,
+              zIndex: 100,
+            }}
+          >
+            <ScrollToBottomButton 
+              visible={showScrollButton} 
+              onPress={scrollToBottom} 
+            />
+          </YStack>
+        </ZStack>
+
         <YStack pb={insets.bottom}>
           {renderInput()}
         </YStack>
