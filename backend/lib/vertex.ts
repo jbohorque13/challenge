@@ -39,7 +39,7 @@ export const vertexAI = new VertexAI({
 });
 
 export const model = vertexAI.getGenerativeModel({
-  model: 'gemini-1.5-pro',
+  model: 'gemini-1.5-flash-002',
   generationConfig: {
     maxOutputTokens: 2048,
     temperature: 0.7,
