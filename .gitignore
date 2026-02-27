@@ -37,11 +37,15 @@ node_modules
 .idea
 
 .env
-# local env files
-.env.local
-.env.development.local
-.env.test.localp
-.env.production.local
+.env.*
+backend/.env
+# Service account and other credential JSONs
+**/*.service-account.json
+**/*-creds.json
+!package.json
+!tsconfig.json
+!app.json
+!vercel.json
 
 .expo
 ios

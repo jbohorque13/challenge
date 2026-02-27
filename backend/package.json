@@ -1,0 +1,16 @@
+{
+  "name": "challenge-backend",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "deploy": "vercel"
+  },
+  "dependencies": {
+    "@google-cloud/vertexai": "^1.9.3",
+    "dotenv": "^16.4.7"
+  },
+  "devDependencies": {
+    "@vercel/node": "^5.1.8",
+    "typescript": "^5.7.3"
+  }
+}
