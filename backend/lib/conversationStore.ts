@@ -1,3 +1,5 @@
+import { redis } from './redis';
+
 export type MessageRole = 'user' | 'model';
 
 export interface ChatMessage {
@@ -6,35 +8,74 @@ export interface ChatMessage {
 }
 
 /**
- * ConversationStore - Abstraction for managing chat history.
- * Current implementation: In-memory Map (Best effort for single-instance/dev).
- * Scalable for future DB integration (Redis/Postgres).
+ * ConversationStore - Redis-backed chat history management.
+ * Key format: chat:{userId}:{conversationId}
  */
 class ConversationStore {
-  private conversations: Map<string, ChatMessage[]> = new Map();
   private readonly MAX_HISTORY = 20;
 
-  public getHistory(conversationId: string): ChatMessage[] {
-    return this.conversations.get(conversationId) || [];
+  private getKey(userId: string, conversationId: string): string {
+    return `chat:${userId}:${conversationId}`;
   }
 
-  public addMessage(conversationId: string, role: MessageRole, content: string): void {
-    const history = this.getHistory(conversationId);
-    
+  /**
+   * Retrieves messages for a specific user and conversation.
+   * Vertex AI expects a specific format: { role: 'user' | 'model', parts: [{ text: string }] }
+   */
+  public async getHistory(userId: string, conversationId: string): Promise<ChatMessage[]> {
+    const key = this.getKey(userId, conversationId);
+    try {
+      const history = await redis.get<ChatMessage[]>(key);
+      return history || [];
+    } catch (error) {
+      console.error('Redis error getting history:', error);
+      return [];
+    }
+  }
+
+  /**
+   * Appends a new message to the conversation history and trims it to the last N messages.
+   */
+  public async addMessage(
+    userId: string, 
+    conversationId: string, 
+    role: MessageRole, 
+    content: string
+  ): Promise<void> {
+    const key = this.getKey(userId, conversationId);
+    const history = await this.getHistory(userId, conversationId);
+
     history.push({
       role,
       parts: [{ text: content }]
     });
 
-    // Keep only the last N messages to prevent token overflow
     const trimmedHistory = history.slice(-this.MAX_HISTORY);
-    this.conversations.set(conversationId, trimmedHistory);
+
+    try {
+      // Set with a 24-hour expiration to keep Redis clean (optional, but recommended)
+      await redis.set(key, trimmedHistory, { ex: 86400 });
+    } catch (error) {
+      console.error('Redis error adding message:', error);
+    }
   }
 
-  public clear(conversationId: string): void {
-    this.conversations.delete(conversationId);
+  /**
+   * Manual trim function as an abstraction.
+   */
+  public async trimHistory(userId: string, conversationId: string): Promise<void> {
+    const key = this.getKey(userId, conversationId);
+    const history = await this.getHistory(userId, conversationId);
+    if (history.length > this.MAX_HISTORY) {
+      const trimmed = history.slice(-this.MAX_HISTORY);
+      await redis.set(key, trimmed, { ex: 86400 });
+    }
+  }
+
+  public async clear(userId: string, conversationId: string): Promise<void> {
+    const key = this.getKey(userId, conversationId);
+    await redis.del(key);
   }
 }
 
-// Singleton instance for the application
 export const conversationStore = new ConversationStore();
