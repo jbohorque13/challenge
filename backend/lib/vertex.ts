@@ -1,4 +1,4 @@
-import { VertexAI, GoogleAuthOptions } from '@google-cloud/vertexai';
+import { VertexAI } from '@google-cloud/vertexai';
 import dotenv from 'dotenv';
 
 dotenv.config();
@@ -13,7 +13,7 @@ if (!project || !clientEmail || !privateKey) {
 }
 
 // Configuration for using Service Account credentials from environment variables
-const googleAuthOptions: GoogleAuthOptions = {
+const googleAuthOptions = {
   credentials: {
     client_email: clientEmail,
     private_key: privateKey,
