@@ -1,4 +1,4 @@
-import React, { memo, useCallback, useRef, useState } from 'react'
+import React, { memo, useCallback, useRef, useState, useEffect } from 'react'
 import { YStack, styled, ZStack } from 'tamagui'
 import { FlatList, Platform, type NativeSyntheticEvent, type NativeScrollEvent } from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
@@ -30,23 +30,37 @@ const RootContainer = styled(YStack, {
 })
 
 /**
- * ChatLayout - High-performance AI Interface
+ * ChatLayout - Smart Scroll Interface
  * 
- * UX Decisions:
- * 1. Inverted FlatList: Standard for chat, ensures bottom-aligned growth and 
- *    frame-perfect keyboard push-up.
- * 2. Scrolled-Up detection: In an inverted list, y=0 is bottom. We show the 
- *    jump-to-bottom button if y > 100.
+ * Logic:
+ * - Auto-scroll on user send.
+ * - Auto-scroll on assistant arrival ONLY if user is already near bottom.
+ * - Uses inverted list: y=0 is bottom.
  */
 const ChatLayout = ({ messages, isTyping, onRegenerate, onStreamEnd, renderInput }: ChatLayoutProps) => {
   const insets = useSafeAreaInsets()
   const headerHeight = useHeaderHeight()
   const flatListRef = useRef<FlatList>(null)
+  const isNearBottomRef = useRef(true)
   const [showScrollButton, setShowScrollButton] = useState(false)
+
+  // Smart scroll logic
+  useEffect(() => {
+    if (messages.length === 0) return
+
+    const lastMessage = messages[0] // Inverted list, first item is latest
+    const isUserMessage = lastMessage.role === 'user'
+
+    // Always scroll on user send, or if assistant arrives while near bottom
+    if (isUserMessage || isNearBottomRef.current) {
+      flatListRef.current?.scrollToOffset({ offset: 0, animated: true })
+    }
+  }, [messages.length])
 
   const handleScroll = useCallback((event: NativeSyntheticEvent<NativeScrollEvent>) => {
     const yOffset = event.nativeEvent.contentOffset.y
-    // In inverted lists, y > 0 means the user has scrolled away from the bottom (top of the view)
+    // In inverted lists, y = 0 is bottom.
+    isNearBottomRef.current = yOffset < 50
     setShowScrollButton(yOffset > 100)
   }, [])
 
@@ -90,7 +104,6 @@ const ChatLayout = ({ messages, isTyping, onRegenerate, onStreamEnd, renderInput
             ListHeaderComponent={isTyping ? <TypingIndicator /> : null}
           />
 
-          {/* Floating Scroll to Bottom - Positioned above input */}
           <YStack 
             pointerEvents="box-none"
             style={{

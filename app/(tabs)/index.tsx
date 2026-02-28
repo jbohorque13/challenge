@@ -5,7 +5,7 @@ import ChatInput from 'components/chat/ChatInput'
 import { chatService } from 'services/chatService'
 
 /**
- * ChatScreen - Implementation for Phase 1 + Markdown Support
+ * ChatScreen - Intelligent Messaging Experience
  */
 export default function ChatScreen() {
   const [messages, setMessages] = useState<Message[]>([

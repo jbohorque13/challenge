@@ -3,12 +3,17 @@
   "version": "1.0.0",
   "private": true,
   "scripts": {
-    "deploy": "vercel"
+    "deploy": "vercel",
+    "android": "expo run:android",
+    "ios": "expo run:ios"
   },
   "dependencies": {
     "@google-cloud/vertexai": "^1.9.3",
     "@upstash/redis": "^1.36.3",
-    "dotenv": "^16.4.7"
+    "dotenv": "^16.4.7",
+    "expo": "~54.0.33",
+    "react": "19.1.0",
+    "react-native": "0.81.5"
   },
   "devDependencies": {
     "@vercel/node": "^5.1.8",

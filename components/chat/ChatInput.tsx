@@ -1,4 +1,4 @@
-import React, { memo } from 'react'
+import React, { memo, useEffect, useState } from 'react'
 import { XStack, YStack, Button, TextArea } from 'tamagui'
 import { Send } from '@tamagui/lucide-icons'
 
@@ -11,13 +11,7 @@ export type ChatInputProps = {
 }
 
 /**
- * ChatInput Component
- * 
- * Design Aesthetics:
- * - Minimalist, modern borderless style within the wrapper.
- * - Subtle elevation and shadows for the input bar.
- * - Dynamic button opacity for disabled states.
- * - Optimized for smooth text entry and multiline growth.
+ * ChatInput - Auto-growing premium input
  */
 const ChatInput = ({ 
   value, 
@@ -26,6 +20,22 @@ const ChatInput = ({
   disabled, 
   placeholder = 'Message...' 
 }: ChatInputProps) => {
+  const [contentHeight, setContentHeight] = useState(22)
+
+  const handleContentSizeChange = (event: { nativeEvent: { contentSize: { width: number; height: number } } }) => {
+    const height = event.nativeEvent.contentSize.height
+    // Min height 40, Max height around 140 (approx 5-6 lines)
+    console.log('handleContentSizeChange', height)
+    if (height >= 20 && height <= 140) {
+      setContentHeight(height)
+    }
+  }
+
+  const handleSend = () => {
+    onSend()
+    setContentHeight(40) // Reset height after send
+  }
+
   return (
     <YStack 
       bg="$background" 
@@ -40,13 +50,11 @@ const ChatInput = ({
         borderWidth={1} 
         borderColor="$borderColor" 
         px="$4" 
-        py="$2" 
+        py="$1" 
         items="center" 
         gap="$3"
         elevation={1}
-        shadowColor="$shadowColor"
-        shadowOpacity={0.05}
-        shadowRadius={8}
+        style={{ minHeight: 48 }}
       >
         <TextArea
           flex={1}
@@ -57,11 +65,10 @@ const ChatInput = ({
           placeholderTextColor="$color"
           focusStyle={{ outlineWidth: 0, bg: 'transparent' }}
           fontSize={16}
-          p={0}
+          px={0}
+          mx={0}
           value={value}
           onChangeText={onChangeText}
-          rows={1}
-          maxH={120}
           multiline
           autoComplete="off"
           autoCorrect={false}
@@ -73,11 +80,10 @@ const ChatInput = ({
           bg="$background"
           borderWidth={1}
           borderColor="$borderColor"
-          hoverStyle={{ bg: '$surface1' }}
-          pressStyle={{ scale: 0.92, opacity: 0.8 }}
-          onPress={onSend}
+          onPress={handleSend}
           disabled={disabled || !value.trim()}
           opacity={disabled || !value.trim() ? 0.4 : 1}
+          pressStyle={{ scale: 0.92, opacity: 0.8 }}
         />
       </XStack>
     </YStack>
