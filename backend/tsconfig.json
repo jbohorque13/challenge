@@ -11,6 +11,12 @@
     "sourceMap": true,
     "rootDir": "."
   },
-  "include": ["api/**/*", "lib/**/*"],
-  "exclude": ["node_modules"]
+  "include": [
+    "api/**/*",
+    "lib/**/*"
+  ],
+  "exclude": [
+    "node_modules"
+  ],
+  "extends": "expo/tsconfig.base"
 }
