@@ -5,7 +5,9 @@
  */
 
 // Replace with your Vercel deployment URL (e.g. 'https://your-project.vercel.app')
-const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL!;
+const API_BASE_URL = process.env.EXPO_PUBLIC_API_BASE_URL!;
+
+console.log("API_BASE_URL", API_BASE_URL);
 
 // This must match the APP_SECRET in your backend environment variables
 const APP_SECRET = process.env.EXPO_PUBLIC_APP_SECRET!;
@@ -33,7 +35,6 @@ export const chatService = {
           message
         })
       });
-
       if (!response.ok) {
         const errorData = await response.json();
         throw new Error(errorData.error || 'Server error');

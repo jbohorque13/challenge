@@ -42,7 +42,7 @@ const ChatBubble = ({
         my="$1.5"
       >
         <BubbleContainer
-          p={isUser ? '$4' : '$0'}
+          p="$4"
           bg={isUser ? '$surface2' : '$surface1'}
           borderWidth={isUser ? 1 : 0}
           borderColor="$borderColor"
@@ -51,6 +51,7 @@ const ChatBubble = ({
           <StreamingText 
             content={message} 
             isStreaming={!isUser && isStreaming} 
+            isMarkdown={!isUser}
             onStreamEnd={onStreamEnd}
           />
         </BubbleContainer>
