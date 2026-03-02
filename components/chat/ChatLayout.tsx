@@ -30,42 +30,48 @@ const RootContainer = styled(YStack, {
 })
 
 /**
- * ChatLayout - Smart Scroll Interface
+ * ChatLayout - Standard Chronological Interface (Non-Inverted)
  * 
- * Logic:
- * - Auto-scroll on user send.
- * - Auto-scroll on assistant arrival ONLY if user is already near bottom.
- * - Uses inverted list: y=0 is bottom.
+ * Performance Specs:
+ * - Chronological ordering (Oldest -> Newest).
+ * - Downward growth.
+ * - Minimal re-renders.
  */
 const ChatLayout = ({ messages, isTyping, onRegenerate, onStreamEnd, renderInput }: ChatLayoutProps) => {
   const insets = useSafeAreaInsets()
   const headerHeight = useHeaderHeight()
   const flatListRef = useRef<FlatList>(null)
-  const isNearBottomRef = useRef(true)
+  const isAtBottomRef = useRef(true)
   const [showScrollButton, setShowScrollButton] = useState(false)
 
-  // Smart scroll logic
+  // Auto-scroll on user send is handled by the parent calling scrollToEnd if needed,
+  // or detectable here by message length change and role check.
   useEffect(() => {
     if (messages.length === 0) return
-
-    const lastMessage = messages[0] // Inverted list, first item is latest
-    const isUserMessage = lastMessage.role === 'user'
-
-    // Always scroll on user send, or if assistant arrives while near bottom
-    if (isUserMessage || isNearBottomRef.current) {
-      flatListRef.current?.scrollToOffset({ offset: 0, animated: true })
+    
+    const latestMessage = messages[messages.length - 1]
+    
+    // Rule: Auto-scroll ONLY when user sends a message.
+    // AI streaming updates (content changes) won't trigger this unless length or id changes.
+    if (latestMessage.role === 'user') {
+      // Use a small timeout to ensure layout has updated
+      setTimeout(() => {
+        flatListRef.current?.scrollToEnd({ animated: true })
+      }, 100)
     }
   }, [messages.length])
 
   const handleScroll = useCallback((event: NativeSyntheticEvent<NativeScrollEvent>) => {
-    const yOffset = event.nativeEvent.contentOffset.y
-    // In inverted lists, y = 0 is bottom.
-    isNearBottomRef.current = yOffset < 50
-    setShowScrollButton(yOffset > 100)
+    const { layoutMeasurement, contentOffset, contentSize } = event.nativeEvent
+    const paddingToBottom = 50
+    const isAtBottom = layoutMeasurement.height + contentOffset.y >= contentSize.height - paddingToBottom
+    
+    isAtBottomRef.current = isAtBottom
+    setShowScrollButton(!isAtBottom && contentOffset.y > 200)
   }, [])
 
   const scrollToBottom = useCallback(() => {
-    flatListRef.current?.scrollToOffset({ offset: 0, animated: true })
+    flatListRef.current?.scrollToEnd({ animated: true })
   }, [])
 
   const renderItem = useCallback(({ item }: { item: Message }) => {
@@ -93,15 +99,18 @@ const ChatLayout = ({ messages, isTyping, onRegenerate, onStreamEnd, renderInput
             data={messages}
             keyExtractor={(item) => item.id}
             renderItem={renderItem}
-            inverted
+            inverted={false} // Requirement: No inverted
             removeClippedSubviews={Platform.OS === 'android'}
             initialNumToRender={15}
             windowSize={10}
             keyboardShouldPersistTaps="handled"
-            contentContainerStyle={{ padding: 16 }}
+            contentContainerStyle={{ 
+              padding: 16,
+              paddingBottom: insets.bottom + 100 // Visual breathing room
+            }}
             onScroll={handleScroll}
             scrollEventThrottle={16}
-            ListHeaderComponent={isTyping ? <TypingIndicator /> : null}
+            ListFooterComponent={isTyping ? <TypingIndicator /> : null} // Footer for standard list
           />
 
           <YStack 
