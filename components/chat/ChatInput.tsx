@@ -20,20 +20,9 @@ const ChatInput = ({
   disabled, 
   placeholder = 'Message...' 
 }: ChatInputProps) => {
-  const [contentHeight, setContentHeight] = useState(22)
-
-  const handleContentSizeChange = (event: { nativeEvent: { contentSize: { width: number; height: number } } }) => {
-    const height = event.nativeEvent.contentSize.height
-    // Min height 40, Max height around 140 (approx 5-6 lines)
-    console.log('handleContentSizeChange', height)
-    if (height >= 20 && height <= 140) {
-      setContentHeight(height)
-    }
-  }
 
   const handleSend = () => {
     onSend()
-    setContentHeight(40) // Reset height after send
   }
 
   return (
