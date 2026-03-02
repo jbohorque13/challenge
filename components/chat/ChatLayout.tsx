@@ -49,7 +49,7 @@ const ChatLayout = ({ messages, isTyping, onRegenerate, onStreamEnd, renderInput
   useEffect(() => {
     if (messages.length === 0) return
     
-    const latestMessage = messages[messages.length - 1]
+    const latestMessage = messages[messages.length - 2]
     
     // Rule: Auto-scroll ONLY when user sends a message.
     // AI streaming updates (content changes) won't trigger this unless length or id changes.
