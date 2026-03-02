@@ -106,7 +106,6 @@ const ChatLayout = ({ messages, isTyping, onRegenerate, onStreamEnd, renderInput
             keyboardShouldPersistTaps="handled"
             contentContainerStyle={{ 
               padding: 16,
-              paddingBottom: insets.bottom + 100 // Visual breathing room
             }}
             onScroll={handleScroll}
             scrollEventThrottle={16}
