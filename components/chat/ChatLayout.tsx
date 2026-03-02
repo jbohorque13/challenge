@@ -53,7 +53,7 @@ const ChatLayout = ({ messages, isTyping, onRegenerate, onStreamEnd, renderInput
     
     // Rule: Auto-scroll ONLY when user sends a message.
     // AI streaming updates (content changes) won't trigger this unless length or id changes.
-    if (latestMessage.role === 'user') {
+    if (latestMessage?.role === 'user') {
       // Use a small timeout to ensure layout has updated
       setTimeout(() => {
         flatListRef.current?.scrollToEnd({ animated: true })
